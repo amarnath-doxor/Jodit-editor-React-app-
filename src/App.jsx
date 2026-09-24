@@ -26,8 +26,17 @@ function loadSaved() {
 }
 
 function countStats(html) {
-  const text = new DOMParser().parseFromString(html || '', 'text/html').body.textContent || '';
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const body = new DOMParser().parseFromString(html || '', 'text/html').body;
+  const text = body.textContent || '';
+  // textContent glues adjacent blocks together ("<p>a</p><p>b</p>" -> "ab"), so separate them before counting words
+  body
+    .querySelectorAll('p, div, ul, ol, li, table, tr, td, th, h1, h2, h3, h4, h5, h6, blockquote, pre, br')
+    .forEach((el) => {
+      el.before(' ');
+      el.after(' ');
+    });
+  const spaced = body.textContent.trim();
+  const words = spaced ? spaced.split(/\s+/).length : 0;
   return { chars: text.length, words, htmlLength: (html || '').length };
 }
 
@@ -128,11 +137,12 @@ export default function App() {
                   onBlur={(v) => setLastBlur({ at: new Date().toLocaleTimeString(), length: v.length })}
                   options={options}
                 />
-                {lastBlur && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    onBlur fired at {lastBlur.at} ({lastBlur.length} HTML chars)
-                  </Typography>
-                )}
+                {/* Always rendered so the layout doesn't shift (and eat a click) on the first blur */}
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  {lastBlur
+                    ? `onBlur fired at ${lastBlur.at} (${lastBlur.length} HTML chars)`
+                    : 'onBlur has not fired yet'}
+                </Typography>
               </CardContent>
             </Card>
 
@@ -212,7 +222,7 @@ export default function App() {
                     <Button size="small" variant="outlined" onClick={() => insertAtCursor('<strong style="color:#1976d2">Hello from MUI!</strong>&nbsp;')}>
                       Insert HTML at cursor
                     </Button>
-                    <Button size="small" variant="outlined" onClick={() => runCommand('toggleFullSize')}>
+                    <Button size="small" variant="outlined" onClick={() => editorRef.current?.toggleFullSize()}>
                       Toggle fullscreen
                     </Button>
                     <Divider />
