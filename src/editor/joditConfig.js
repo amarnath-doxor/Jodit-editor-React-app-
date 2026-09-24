@@ -36,7 +36,8 @@ const customControls = {
       signature: 'Signature',
     },
     childTemplate: (editor, key, value) => `<span>${value}</span>`,
-    exec: (editor, _current, { control }) => {
+    // childExec (not exec) so clicking the main button opens the list instead of doing nothing
+    childExec: (editor, _current, { control }) => {
       const key = control.args?.[0];
       const blocks = {
         note: '<p style="padding:12px;border-left:4px solid #1976d2;background:#e3f2fd;">ℹ️ <strong>Note:</strong> Write your note here.</p>',
